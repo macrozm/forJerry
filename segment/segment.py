@@ -1,6 +1,7 @@
 #coding:utf-8
 
 import numpy as np
+import logging
 
 class Segment():
     """
@@ -22,10 +23,10 @@ class Segment():
         """
         if self.next:
             next = self.next
-            print("seg add_next, {} insert {}, {}".format(self.index, seg.index, next.index))
+            logging.info("seg add_next, {} insert {}, {}".format(self.index, seg.index, next.index))
             self.next, next.prev, seg.prev, seg.next = seg, seg, self, next
         else:
-            print("seg add_next to tail: {} {}".format(self.index, seg.index))
+            logging.info("seg add_next to tail: {} {}".format(self.index, seg.index))
             self.next, seg.prev = seg, self
     
     def insert_to_prev(self, seg):
@@ -34,10 +35,10 @@ class Segment():
         """
         if self.prev:
             prev = self.prev
-            print("seg add_prev, {} insert {}, {}".format(prev.index, seg.index, self.index))
+            logging.info("seg add_prev, {} insert {}, {}".format(prev.index, seg.index, self.index))
             prev.next, self.prev, seg.prev, seg.next = seg, seg, prev, self
         else:
-            print("seg add_next to tail: {} {}".format(self.index, seg.index))
+            logging.info("seg add_next to tail: {} {}".format(self.index, seg.index))
             self.next, seg.prev = seg, self
 
     def add(self, v):
@@ -56,7 +57,7 @@ class Segment():
         """
         get (index, value)
         """
-        return [self.index, self.value]
+        return [int(self.index), self.value]
 
 class QueueMgr():
     """
@@ -74,11 +75,11 @@ class QueueMgr():
         check the value is valid
         """
         if start % 10 != 0:
-            raise Error("from: {} value is invalid".format(start))
+            raise ValueError("from: {} value is invalid".format(start))
         if end % 10 != 0:
-            raise Error("to: {} value is invalid".fromat(end))
+            raise ValueError("to: {} value is invalid".fromat(end))
         if start >= end:
-            raise Error("from: {} should be less than to: {}".format(start, end))
+            raise ValueError("from: {} should be less than to: {}".format(start, end))
 
     def make_index(self, start, end):
         """
@@ -104,13 +105,13 @@ class QueueMgr():
             if pos == 'head':
                 seg = Segment(index, value=amount)
                 self.qhead = seg
-                print("init queue(head) add index {} value {} to queue".format(seg.index, seg.value))
+                logging.debug("init queue(head) add index {} value {} to queue".format(seg.index, seg.value))
                 self.index_dict[index] = seg
             if pos == 'end':
                 seg = Segment(index, value=0)
                 self.index_dict[index] = seg
                 self.qhead.insert_to_next(seg)
-                print("init queue(end) add index {} value {} to queue".format(seg.index, seg.value))
+                logging.debug("init queue(end) add index {} value {} to queue".format(seg.index, seg.value))
 
     
     def get_tail(self):
@@ -135,7 +136,7 @@ class QueueMgr():
         for seg in self.all_seg():
             if node.index < seg.index:
                 pos = seg
-                print("add_node, find pos:", seg.index)
+                logging.debug("add_node, find pos: {}".format(seg.index))
                 break
         #if not find position,  it would be the new tail;
         if not pos:
@@ -153,10 +154,10 @@ class QueueMgr():
                 if index is the new head of the queue, just add it;
                 if index is not the head, then the new value is seq(index).prev.value + amount
         """
-        print("add_head ", index, " ", amount)
+        logging.debug("add_head index: {} value: {}".format(index, amount))
         is_exist = index in self.index_dict
         if is_exist:
-            print('exist ', index, ' ', amount, '')
+            logging.debug('exist: index:{} value:{}'.format(index, amount))
             node = self.index_dict[index]
             node.add(amount)
             return
@@ -164,7 +165,7 @@ class QueueMgr():
         is_newhead = index < self.qhead.index
         node = Segment(index, value=amount)
         if is_newhead:
-            node.add_to_next(self.qhead)
+            node.insert_to_next(self.qhead)
             self.qhead = node
             self.index_dict[index] = node
             return
@@ -177,20 +178,19 @@ class QueueMgr():
         """
         add in the middle of the queue
         """
-        print("add middle {} {}".format(index, amount))
+        logging.debug("add middle {} {}".format(index, amount))
         if index in self.index_dict:
             self.index_dict[index].add(amount)
-            print("in add middle {} {}".format(index, amount))
+            logging.debug("in add middle {} {}".format(index, amount))
         else:
-            print("in add middle {} not in dict".format(index))
-            print(self.index_dict)
+            logging.debug("in add middle {} not in dict".format(index))
         return
     
     def add_end(self, index, amount):
         """
         add to the end of the queue
         """
-        print("add end  {} {}".format(index, amount))
+        logging.debug("add end  {} {}".format(index, amount))
         if index in self.index_dict:
             return
         #if index is in the middle, also do nothing
@@ -212,7 +212,7 @@ class QueueMgr():
             return
 
         for (index, pos) in self.make_index(start, end):
-            print("make_index return index: {} pos:{}".format(index, pos))
+            logging.debug("make_index return index: {} pos:{}".format(index, pos))
             if pos == 'head':
                 self.add_head(index, amount)
             if pos == 'middle':
@@ -228,29 +228,63 @@ class QueueMgr():
         while head != None:
             yield head
             head = head.next
+    def reduce_head(self, result):
+        """
+        reduce if the first element's value is 0
+        """
+        if not result:
+            return []
+        logging.debug("reduce input: {}".format(result))
+        if result[0][1] == 0:
+            logging.debug("reduce head: [{}, 0]".format(result[0][0]))
+            return self.reduce_head(result[1:])
+        else:
+            logging.debug("recude head, return the ogiginal")
+            return result
+
+    def reduce_tail(self, result):
+        """
+        reduce the tail repeated segment if the value is 0
+        keep the first one which the value is 0
+        """
+        if not result:
+            return []
+        if len(result) == 0:
+            return result
+        if result[-1][1] == 0 and result[-2][1] == 0:
+            return self.reduce_tail(result[:-1])
+        else:
+            return result
 
     def to_string(self):
         """
         show the queue with string
         """
+        result = []
         for e in self.all_seg():
-            print(e.get())
+            result.append(e.get())
+        #result = list(map(lambda e:[int(e[0]), e[1]], result))
+        result = self.reduce_head(result)
+        result = self.reduce_tail(result)
+        return str(result)
         
 def main():
     print("main")
     queue_mgr = QueueMgr()
     queue_mgr.add(10, 30, 1)
+
     queue_mgr.to_string()
     print("new")
     queue_mgr.add(20, 40, 1)
     queue_mgr.to_string()
-
     print("new")
     queue_mgr.add(10, 40, -2)
     queue_mgr.to_string()
 
     print("new main")
     queue_mgr = QueueMgr()
+    queue_mgr.to_string()
+    print("\tnew")
     queue_mgr.add(10, 30, 1)
     queue_mgr.to_string()
     print("new")
@@ -263,6 +297,8 @@ def main():
     print("new")
     queue_mgr.add(10, 40, -1)
     queue_mgr.to_string()
+
+    
 
 if __name__ == "__main__":
     main()
