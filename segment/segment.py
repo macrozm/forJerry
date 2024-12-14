@@ -37,7 +37,7 @@ class Segment():
             prev = self.prev
             logging.info("seg add_prev, {} insert {}, {}".format(prev.index, seg.index, self.index))
             prev.next, self.prev, seg.prev, seg.next = seg, seg, prev, self
-        else:
+        else: #self is head
             logging.info("seg add_next to tail: {} {}".format(self.index, seg.index))
             self.next, seg.prev = seg, self
 
@@ -120,7 +120,7 @@ class QueueMgr():
         return the tail seg
         """
         if not self.qhead:
-            raise(Error("the queue is empty"))
+            raise ValueError("the queue is empty")
 
         head = self.qhead
         while head:
@@ -144,6 +144,7 @@ class QueueMgr():
             pos = self.get_tail()
         #insert the next of seg
         pos.insert_to_prev(node)
+        #this is required in the demo, it's weird
         if node.prev:
             node.add(node.prev.value)
 
@@ -225,6 +226,7 @@ class QueueMgr():
         """
         set the segment value, the range is: [start, end]
         """
+        self.check_valid(start, end)
         for (index, pos) in self.make_index(start, end):
             logging.debug("make_index return index: {} pos:{}".format(index, pos))
             if pos != 'end' and index in self.index_dict:
@@ -260,7 +262,7 @@ class QueueMgr():
         """
         if not result:
             return []
-        if len(result) == 0:
+        if len(result) == 1:
             return result
         if result[-1][1] == 0 and result[-2][1] == 0:
             return self.reduce_tail(result[:-1])
@@ -271,14 +273,9 @@ class QueueMgr():
         """
         show the queue with string
         """
-        result = []
-        for e in self.all_seg():
-            result.append(e.get())
-        #result = list(map(lambda e:[int(e[0]), e[1]], result))
-        result = self.reduce_head(result)
-        result = self.reduce_tail(result)
-        return str(result)
-        
+        return str(self.reduce_tail(self.reduce_head([e.get() for e in self.all_seg()])))
+
+"""  
 def main():
     print("main")
     queue_mgr = QueueMgr()
@@ -313,3 +310,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+"""
