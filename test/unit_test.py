@@ -66,6 +66,12 @@ class TestStringMethods(unittest.TestCase):
         queue_mgr.add(-10, 40, 1)
         self.assertEqual(queue_mgr.to_string(), '[[-10, 1], [0, 1], [10, 1], [20, 1], [40, 0]]')
 
+        queue_mgr.set(0, 30, 5)
+        self.assertEqual(queue_mgr.to_string(), '[[-10, 1], [0, 5], [10, 5], [20, 5], [40, 0]]')
+        queue_mgr.set(-10, 50, 0)
+        self.assertEqual(queue_mgr.to_string(), '[]')
+
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -47,7 +47,7 @@ class Segment():
         """
         self.value += v
 
-    def set(sef, v):
+    def set(self, v):
         """
         set self value to v
         """
@@ -57,7 +57,7 @@ class Segment():
         """
         get (index, value)
         """
-        return [int(self.index), self.value]
+        return [self.index, self.value]
 
 class QueueMgr():
     """
@@ -86,6 +86,7 @@ class QueueMgr():
         make the sequence of [from, to]
         """
         seq = np.arange(start, end + 10, 10)
+        seq = list(map(lambda e:int(e), seq))
         yield (seq[0], 'head')
         for e in seq[1:-1]:
             yield (e, 'middle')
@@ -219,7 +220,16 @@ class QueueMgr():
                 self.add_middle(index, amount)
             if pos == 'end':
                 self.add_end(index, amount)
-    
+
+    def set(self, start, end, amount):
+        """
+        set the segment value, the range is: [start, end]
+        """
+        for (index, pos) in self.make_index(start, end):
+            logging.debug("make_index return index: {} pos:{}".format(index, pos))
+            if pos != 'end' and index in self.index_dict:
+                self.index_dict[index].set(amount)
+
     def all_seg(self):
         """
         iter the segs in self.qhead in order
@@ -228,6 +238,7 @@ class QueueMgr():
         while head != None:
             yield head
             head = head.next
+
     def reduce_head(self, result):
         """
         reduce if the first element's value is 0
