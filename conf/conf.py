@@ -1,5 +1,8 @@
 #coding:utf-8
 import logging
+"""
+a simple config fot logging & debug
+"""
 
 
 LOG_FORMAT = "%(asctime)s %(name)s %(levelname)s %(pathname)s %(message)s "
