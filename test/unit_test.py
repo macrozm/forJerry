@@ -1,10 +1,16 @@
 #coding:utf-8
-
+"""
+test for the SegmentMgr class
+test_add and test_add2 is for the DEMO, 
+test_add3 is other test informations and test for the SET func which DEMO is not contained.
+author: zm@2024
+"""
 import unittest
 import sys
 sys.path.append("./")  #for run in root directory
 sys.path.append("../") #for run in test/ directory 
 from segment.segment import QueueMgr
+
 
 class TestStringMethods(unittest.TestCase):
     """
