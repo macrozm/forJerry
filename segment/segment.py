@@ -2,7 +2,12 @@
 
 import numpy as np
 import logging
-
+"""
+doc string that:
+    class Segment: the element for the Double Queue.
+    class SegmentMgr: the manage class of the Queue, all the API function is this class
+    Author: zm@2024
+"""
 class Segment():
     """
     the segment element in the queu
